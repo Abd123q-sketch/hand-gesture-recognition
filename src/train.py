@@ -8,6 +8,7 @@ import json
 import os
 import sys
 from datetime import datetime
+from tensorflow.keras import mixed_precision  # Mixed precision pour accélérer sur GPU
 
 # Ajouter le répertoire parent au path pour importer config
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -15,6 +16,8 @@ import config
 from src.models import get_model
 from src.preprocessing import HandPreprocessor
 
+# Activer le mixed precision (gain de perf sur GPU, neutre sur CPU)
+mixed_precision.set_global_policy("mixed_float16")
 
 def load_data(data_dir=None, use_landmarks=None):
     """
@@ -184,7 +187,7 @@ def train_model():
     model = get_model('cnn_lstm', input_shape, num_classes,
                      sequence_length=sequence_length)
     
-model.summary()
+    model.summary()
 
     # Calculer les poids de classe pour compenser le déséquilibre
     from collections import Counter
@@ -233,16 +236,16 @@ model.summary()
         )
     ]
 
-# Entraînement
+    # Entraînement
     print("\n" + "="*60)
     print("DEBUT DE L'ENTRAINEMENT")
     print("="*60)
     
-history = model.fit(
-    X_train, y_train,
+    history = model.fit(
+        X_train, y_train,
         batch_size=config.MODEL_SETTINGS["batch_size"],
         epochs=config.MODEL_SETTINGS["epochs"],
-    validation_data=(X_val, y_val),
+        validation_data=(X_val, y_val),
         callbacks=callbacks,
         class_weight=class_weights,  # Utiliser les poids de classe pour compenser le déséquilibre
         verbose=1
