@@ -603,38 +603,6 @@ Les contributions sont les bienvenues ! Pour contribuer :
 
 Ce projet est fourni à des fins éducatives. Libre d'utilisation et de modification.
 
----
+------------------
 
-## 👤 Auteur
-
-Projet développé dans le cadre d'un cours de Deep Learning.
-
-**Contact** : Pour toute question ou suggestion, ouvrez une issue sur le repository.
-
----
-
-## 🙏 Remerciements
-
-- **MediaPipe** : Pour l'excellent outil de suivi des mains
-- **TensorFlow/Keras** : Pour le framework de deep learning
-- **OpenCV** : Pour le traitement d'images
-- La communauté open-source pour les outils et ressources
-
----
-
-## 📞 Support
-
-Si vous rencontrez des problèmes :
-
-1. Consultez la section [Dépannage](#dépannage)
-2. Vérifiez les issues existantes sur le repository
-3. Ouvrez une nouvelle issue avec :
-   - Description du problème
-   - Messages d'erreur complets
-   - Configuration utilisée
-   - Étapes pour reproduire
-
----
-
-**Bon apprentissage et bon développement ! 🚀**
 
