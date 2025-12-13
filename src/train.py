@@ -7,6 +7,7 @@ from pathlib import Path
 import json
 import os
 import sys
+import cv2
 from datetime import datetime
 from tensorflow.keras import mixed_precision  # Mixed precision pour accélérer sur GPU
 
@@ -17,15 +18,36 @@ from src.models import get_model
 from src.preprocessing import HandPreprocessor
 
 # Activer le mixed precision (gain de perf sur GPU, neutre sur CPU)
-mixed_precision.set_global_policy("mixed_float16")
+try:
+    mixed_precision.set_global_policy("mixed_float16")
+except:
+    print("⚠️  Mixed precision non disponible")
 
-def load_data(data_dir=None, use_landmarks=None):
+# Optimisations TensorFlow pour vitesse maximale
+try:
+    tf.config.optimizer.set_jit(True)  # XLA compilation
+except:
+    pass  # XLA peut ne pas être disponible sur tous les systèmes
+
+if tf.config.list_physical_devices('GPU'):
+    print("✅ GPU détecté - optimisations activées")
+    # Optimisations GPU
+    for gpu in tf.config.list_physical_devices('GPU'):
+        try:
+            tf.config.experimental.set_memory_growth(gpu, True)
+        except:
+            pass
+else:
+    print("⚠️  Pas de GPU - utilisation du CPU (plus lent)")
+
+def load_data(data_dir=None, use_landmarks=None, subsample=None):
     """
     Charge les données d'entraînement
     
     Args:
         data_dir: Répertoire contenant les données
         use_landmarks: Utiliser les landmarks (None = auto-détecté)
+        subsample: Fraction des données à utiliser (None = tout, 0.3 = 30%)
         
     Returns:
         (X_train, y_train), (X_val, y_val), (X_test, y_test), class_mapping
@@ -117,6 +139,14 @@ def load_data(data_dir=None, use_landmarks=None):
         with open(mapping_file, 'r') as f:
             class_mapping = json.load(f)
     
+    # Subsampling pour accélérer l'entraînement
+    if subsample is not None and subsample < 1.0:
+        n_train = int(len(X_train) * subsample)
+        indices = np.random.choice(len(X_train), n_train, replace=False)
+        X_train = X_train[indices]
+        y_train = y_train[indices]
+        print(f"⚠️  Subsampling: Utilisation de {n_train}/{len(X_train)} échantillons d'entraînement ({subsample*100:.0f}%)")
+    
     print(f"Donnees chargees:")
     print(f"  Train: {X_train.shape}, Labels: {y_train.shape}")
     print(f"  Val: {X_val.shape}, Labels: {y_val.shape}")
@@ -156,9 +186,11 @@ def train_model():
     # Forcer l'utilisation des images (pas de landmarks)
     use_landmarks = False
     
-    # Charger les données d'images
+    # Charger les données d'images avec subsampling
+    subsample = config.MODEL_SETTINGS.get("data_subsample", None)
     (X_train, y_train), (X_val, y_val), (X_test, y_test), class_mapping = load_data(
-        use_landmarks=use_landmarks
+        use_landmarks=use_landmarks,
+        subsample=subsample
     )
     
     num_classes = len(class_mapping)
@@ -170,6 +202,16 @@ def train_model():
             f"   Les landmarks ne sont pas supportes. Utilisez des images pretraitees.\n"
             f"   Executez: python src/preprocessing.py (avec use_landmarks=False dans config.py)"
         )
+    
+    # Redimensionner les images si nécessaire (fallback si données en 64x64)
+    if len(X_train.shape) == 4 and X_train.shape[1] != config.PREPROCESSING_SETTINGS["image_size"]:
+        target_size = config.PREPROCESSING_SETTINGS["image_size"]
+        print(f"⚠️  Redimensionnement des images de {X_train.shape[1]}x{X_train.shape[2]} à {target_size}x{target_size}")
+        X_train_resized = np.array([cv2.resize(img, (target_size, target_size)) for img in X_train])
+        X_val_resized = np.array([cv2.resize(img, (target_size, target_size)) for img in X_val])
+        X_test_resized = np.array([cv2.resize(img, (target_size, target_size)) for img in X_test])
+        X_train, X_val, X_test = X_train_resized, X_val_resized, X_test_resized
+        print(f"✅ Images redimensionnées: {X_train.shape}")
     
     # Préparer les données pour LSTM (toujours utilisé)
     sequence_length = config.MODEL_SETTINGS["sequence_length"]
@@ -209,37 +251,29 @@ def train_model():
     
     print(f"\nUtilisation de class_weights pour compenser le desequilibre")
     
-    # Callbacks
+    # Callbacks simplifiés pour vitesse (pas de TensorBoard, patience réduite)
     callbacks = [
-        tf.keras.callbacks.EarlyStopping(
-            monitor='val_loss',
-            patience=10,
-            restore_best_weights=True,
-            verbose=1
-        ),
-        tf.keras.callbacks.ReduceLROnPlateau(
-            monitor='val_loss',
-            factor=0.5,
-            patience=5,
-            min_lr=1e-7,
-            verbose=1
-        ),
         tf.keras.callbacks.ModelCheckpoint(
             filepath=str(Path(config.MODELS_DIR) / f"{model_name}_best.h5"),
             monitor='val_accuracy',
             save_best_only=True,
-            verbose=1
-        ),
-        tf.keras.callbacks.TensorBoard(
-            log_dir=str(Path(config.LOGS_DIR) / f"{model_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"),
-            histogram_freq=1
+            verbose=0,  # Moins de verbosité
+            save_weights_only=False
         )
     ]
 
-    # Entraînement
+    # Entraînement avec optimisations pour vitesse
     print("\n" + "="*60)
-    print("DEBUT DE L'ENTRAINEMENT")
+    print("DEBUT DE L'ENTRAINEMENT (MODE RAPIDE < 1 MINUTE)")
     print("="*60)
+    print(f"⚡ Optimisations: batch_size={config.MODEL_SETTINGS['batch_size']}, "
+          f"epochs={config.MODEL_SETTINGS['epochs']}, "
+          f"sequence_length={config.MODEL_SETTINGS['sequence_length']}")
+    if subsample:
+        print(f"⚡ Subsampling: {subsample*100:.0f}% des données")
+    
+    import time
+    start_time = time.time()
     
     history = model.fit(
         X_train, y_train,
@@ -247,9 +281,14 @@ def train_model():
         epochs=config.MODEL_SETTINGS["epochs"],
         validation_data=(X_val, y_val),
         callbacks=callbacks,
-        class_weight=class_weights,  # Utiliser les poids de classe pour compenser le déséquilibre
-        verbose=1
+        class_weight=class_weights,
+        verbose=1,
+        workers=4,  # Parallélisation du chargement des données
+        use_multiprocessing=False  # Éviter les problèmes de fork sur Windows
     )
+    
+    elapsed_time = time.time() - start_time
+    print(f"\n⏱️  Temps d'entraînement: {elapsed_time:.2f} secondes ({elapsed_time/60:.2f} minutes)")
     
     # Évaluation sur le test set
     print("\n" + "="*60)

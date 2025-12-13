@@ -36,20 +36,21 @@ COLLECTION_SETTINGS = {
 
 # Preprocessing settings
 PREPROCESSING_SETTINGS = {
-    "image_size": 64,          # Taille d'image après redimensionnement
+    "image_size": 32,          # Réduit de 64 à 32 pour accélérer (4x moins de pixels)
     "use_landmarks": False,    # Utiliser MediaPipe landmarks (False = utiliser images pour CNN+LSTM)
     "landmark_dim": 21 * 3,    # 21 points * 3 coordonnées (x, y, z)
     "normalize": True,         # Normaliser les valeurs entre 0 et 1
 }
 
-# Model settings
+# Model settings - OPTIMISÉ POUR ENTRAÎNEMENT RAPIDE (< 1 minute)
 MODEL_SETTINGS = {
-    "sequence_length": 16,     # Réduit pour accélérer l'entraînement/inférence
-    "batch_size": 64,          # Plus grand batch => moins d'itérations par epoch
-    "epochs": 25,              # Moins d'epochs (EarlyStopping déjà activé)
+    "sequence_length": 8,      # Réduit de 16 à 8 (2x plus rapide)
+    "batch_size": 256,         # Augmenté de 64 à 256 (4x moins d'itérations)
+    "epochs": 2,               # Réduit de 25 à 2 (12x plus rapide)
     "learning_rate": 0.001,
     "validation_split": 0.2,
     "test_split": 0.1,
+    "data_subsample": 0.3,     # Utiliser seulement 30% des données pour vitesse
 }
 
 # MediaPipe settings

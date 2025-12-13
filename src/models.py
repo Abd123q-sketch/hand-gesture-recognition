@@ -84,36 +84,27 @@ def build_cnn_lstm_model(input_shape, num_classes, sequence_length=None):
     # Input: séquence de frames
     input_layer = layers.Input(shape=(sequence_length,) + input_shape)
     
-    # CNN pour extraire les features de chaque frame
+    # CNN ultra-léger pour vitesse maximale
     cnn = keras.Sequential([
-        layers.TimeDistributed(layers.Conv2D(24, (3, 3), activation='relu'),  # Réduit pour vitesse
+        layers.TimeDistributed(layers.Conv2D(16, (3, 3), activation='relu', padding='same'),
                               input_shape=(sequence_length,) + input_shape),
         layers.TimeDistributed(layers.MaxPooling2D((2, 2))),
-        layers.TimeDistributed(layers.BatchNormalization()),
         
-        layers.TimeDistributed(layers.Conv2D(48, (3, 3), activation='relu')),
+        layers.TimeDistributed(layers.Conv2D(32, (3, 3), activation='relu', padding='same')),
         layers.TimeDistributed(layers.MaxPooling2D((2, 2))),
-        layers.TimeDistributed(layers.BatchNormalization()),
-        
-        layers.TimeDistributed(layers.Conv2D(96, (3, 3), activation='relu')),
-        layers.TimeDistributed(layers.MaxPooling2D((2, 2))),
-        layers.TimeDistributed(layers.BatchNormalization()),
         
         layers.TimeDistributed(layers.Flatten()),
-        layers.TimeDistributed(layers.Dense(96, activation='relu')),
+        layers.TimeDistributed(layers.Dense(32, activation='relu')),
     ])
     
     # Appliquer le CNN sur la séquence
     cnn_output = cnn(input_layer)
     
-    # LSTM pour modéliser la dimension temporelle
-    lstm_out = layers.LSTM(96, return_sequences=True, dropout=0.3)(cnn_output)
-    lstm_out = layers.LSTM(48, dropout=0.3)(lstm_out)
+    # LSTM minimal pour vitesse
+    lstm_out = layers.LSTM(32, dropout=0.2)(cnn_output)
     
-    # Couches fully connected
-    dense = layers.Dense(96, activation='relu')(lstm_out)
-    dense = layers.Dropout(0.5)(dense)
-    dense = layers.Dense(48, activation='relu')(dense)
+    # Couches fully connected minimales
+    dense = layers.Dense(32, activation='relu')(lstm_out)
     dense = layers.Dropout(0.3)(dense)
     
     # Couche de sortie
