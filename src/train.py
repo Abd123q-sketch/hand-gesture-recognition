@@ -251,26 +251,42 @@ def train_model():
     
     print(f"\nUtilisation de class_weights pour compenser le desequilibre")
     
-    # Callbacks simplifiés pour vitesse (pas de TensorBoard, patience réduite)
+    # Callbacks pour meilleure convergence
+    patience = config.MODEL_SETTINGS.get("early_stopping_patience", 5)
     callbacks = [
+        tf.keras.callbacks.EarlyStopping(
+            monitor='val_accuracy',
+            patience=patience,
+            restore_best_weights=True,
+            verbose=1,
+            mode='max'
+        ),
+        tf.keras.callbacks.ReduceLROnPlateau(
+            monitor='val_loss',
+            factor=0.5,
+            patience=3,
+            min_lr=1e-6,
+            verbose=1
+        ),
         tf.keras.callbacks.ModelCheckpoint(
             filepath=str(Path(config.MODELS_DIR) / f"{model_name}_best.h5"),
             monitor='val_accuracy',
             save_best_only=True,
-            verbose=0,  # Moins de verbosité
+            verbose=1,
             save_weights_only=False
         )
     ]
 
-    # Entraînement avec optimisations pour vitesse
+    # Entraînement avec équilibre vitesse/qualité
     print("\n" + "="*60)
-    print("DEBUT DE L'ENTRAINEMENT (MODE RAPIDE < 1 MINUTE)")
+    print("DEBUT DE L'ENTRAINEMENT (MODE ÉQUILIBRÉ)")
     print("="*60)
-    print(f"⚡ Optimisations: batch_size={config.MODEL_SETTINGS['batch_size']}, "
+    print(f"⚙️  Configuration: batch_size={config.MODEL_SETTINGS['batch_size']}, "
           f"epochs={config.MODEL_SETTINGS['epochs']}, "
           f"sequence_length={config.MODEL_SETTINGS['sequence_length']}")
     if subsample:
-        print(f"⚡ Subsampling: {subsample*100:.0f}% des données")
+        print(f"📊 Subsampling: {subsample*100:.0f}% des données")
+    print(f"⏹️  Early Stopping: patience={patience} epochs")
     
     import time
     start_time = time.time()
@@ -282,9 +298,7 @@ def train_model():
         validation_data=(X_val, y_val),
         callbacks=callbacks,
         class_weight=class_weights,
-        verbose=1,
-        workers=4,  # Parallélisation du chargement des données
-        use_multiprocessing=False  # Éviter les problèmes de fork sur Windows
+        verbose=1
     )
     
     elapsed_time = time.time() - start_time
