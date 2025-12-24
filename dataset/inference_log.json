@@ -1,0 +1,19 @@
+{
+  "timestamp": "2025-12-24 23:37:08",
+  "model_path": "saved_models\\cnn_best.pt",
+  "model_type": "cnn",
+  "stats": {
+    "total_predictions": 297,
+    "confident_predictions": 286,
+    "class_counts": {
+      "fist": 224,
+      "okay": 62,
+      "pointing": 0,
+      "thumbs_up": 0,
+      "victory": 0
+    },
+    "no_hands_count": 0,
+    "start_time": 1766615802.928101
+  },
+  "duration_seconds": 25.56061553955078
+}
