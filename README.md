@@ -12,11 +12,6 @@ This project implements a complete hand gesture recognition pipeline with the fo
 - **Data Collection**: Built-in webcam capture for dataset creation
 - **Modular Architecture**: Clean separation of concerns with reusable components
 
-**Use Cases**:
-- Human-Computer Interaction (HCI) applications
-- Sign language recognition foundations
-- Gesture-based control systems
-- Computer vision research and education
 
 ## System Architecture
 
@@ -99,15 +94,6 @@ dataset/
 ├── val/                    # Validation split
 └── test/                   # Test split
 ```
-
-### Supported Gesture Classes
-
-Default gesture set includes:
-- `fist` - Closed fist gesture
-- `like` - Thumbs-up gesture  
-- `okay` - OK hand gesture
-
-Additional gestures can be added by creating corresponding folders during data collection.
 
 ### Dataset Splitting
 
@@ -344,107 +330,3 @@ pip install -r requirements.txt
 python -m hand_gesture_recognition.main --help
 ```
 
-**Note**: The requirements.txt includes TensorFlow, but the project primarily uses PyTorch. TensorFlow may be included for potential future extensions or compatibility.
-
-### Hardware Requirements
-
-**Minimum Requirements**:
-- CPU: Any modern processor
-- RAM: 4GB minimum, 8GB recommended
-- Storage: 2GB free space for models and dataset
-
-**Recommended Requirements**:
-- GPU: NVIDIA GPU with CUDA support
-- RAM: 16GB or more
-- Storage: SSD for faster data loading
-
-## Performance & Limitations
-
-### Current Limitations
-
-**Model Limitations**:
-- **Lightweight Architecture**: Models designed for real-time performance, not maximum accuracy
-- **Limited Context**: CNN processes single frames, CNN-LSTM uses short sequences
-- **No Hand Segmentation**: Uses full frame rather than hand-only regions
-- **Fixed Gesture Set**: Requires retraining for new gesture classes
-
-**Data Limitations**:
-- **Lighting Sensitivity**: Performance varies with lighting conditions
-- **Background Dependency**: Model may learn background patterns
-- **Limited Augmentation**: Basic preprocessing without extensive augmentation
-- **Single User**: Models trained on specific user may not generalize well
-
-**Hardware Constraints**:
-- **CPU Inference**: Real-time performance may be limited on CPU
-- **Memory Usage**: CNN-LSTM requires more memory for sequence processing
-- **Webcam Quality**: Performance depends on webcam resolution and framerate
-
-### Performance Expectations
-
-**Training Performance**:
-- **CNN**: ~1-5 minutes per epoch on modern GPU
-- **CNN-LSTM**: ~2-10 minutes per epoch depending on sequence length
-- **Dataset Size**: Performance scales with dataset size and complexity
-
-**Inference Performance**:
-- **CNN**: 30+ FPS on GPU, 10-20 FPS on CPU
-- **CNN-LSTM**: 20+ FPS on GPU, 5-15 FPS on CPU
-- **Latency**: ~50-100ms processing delay
-
-## Possible Improvements
-
-### Model Enhancements
-
-**Advanced Architectures**:
-- **MediaPipe Integration**: Use MediaPipe for hand detection and cropping
-- **Transformer Models**: Vision transformers for spatial feature extraction
-- **Attention Mechanisms**: Self-attention for temporal modeling
-- **Ensemble Methods**: Combine multiple models for improved accuracy
-
-**Data Improvements**:
-- **Data Augmentation**: Rotation, scaling, color jitter, and synthetic data
-- **Multi-user Datasets**: Collect data from multiple users for better generalization
-- **Background Variation**: Train with diverse backgrounds for robustness
-- **Hand Segmentation**: Pre-process to isolate hand regions
-
-### Performance Optimizations
-
-**Model Optimization**:
-- **Model Quantization**: INT8 quantization for faster inference
-- **ONNX Export**: Deploy to ONNX Runtime for cross-platform inference
-- **TensorRT Integration**: NVIDIA TensorRT for optimized GPU inference
-- **Mobile Deployment**: Convert models for mobile/edge deployment
-
-**System Optimizations**:
-- **Multi-threading**: Parallel data loading and preprocessing
-- **Batch Inference**: Process multiple frames simultaneously
-- **Model Caching**: Cache model predictions for repeated gestures
-- **Adaptive Inference**: Dynamic sequence length based on motion detection
-
-### Feature Extensions
-
-**Advanced Features**:
-- **Gesture Sequences**: Recognize sequences of gestures (e.g., swipe patterns)
-- **Continuous Recognition**: Real-time continuous gesture recognition
-- **Multi-hand Detection**: Support for multiple simultaneous hands
-- **3D Gesture Recognition**: Depth camera integration for 3D gestures
-
-**User Experience**:
-- **GUI Interface**: Graphical user interface for easier interaction
-- **Calibration System**: User-specific calibration for improved accuracy
-- **Gesture Recording**: Record and playback gesture sequences
-- **Custom Gesture Training**: Interface for training custom gestures
-
-### Integration Possibilities
-
-**External Integrations**:
-- **Game Engines**: Unity/Unreal integration for game controls
-- **Web Applications**: WebRTC integration for browser-based recognition
-- **Mobile Apps**: React Native or native mobile applications
-- **IoT Devices**: Integration with smart home devices and IoT platforms
-
-**Research Extensions**:
-- **Sign Language**: Extend to full sign language recognition
-- **Emotion Recognition**: Combine gesture with facial expression analysis
-- **Activity Recognition**: Full-body activity recognition
-- **Healthcare Applications**: Rehabilitation and monitoring systems

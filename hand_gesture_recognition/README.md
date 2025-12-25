@@ -91,12 +91,7 @@ python -m hand_gesture_recognition.inference.realtime_inference \
 5. Evaluate with `training/evaluate.py`.
 6. Run real-time inference.
 
-## Results & Possible Improvements
-- Replace hand detection with MediaPipe for robust ROI.
-- Stronger data augmentation and color normalization.
-- Temporal augmentation and variable-length sequence handling.
-- Knowledge distillation to smaller models for latency.
-- ONNX export and hardware acceleration.
 
 ## Configuration
 All paths and hyperparameters are centralized in `utils/config.py`. Avoid hard-coded paths; pass overrides via CLI args.
+

@@ -27,10 +27,12 @@ def capture_gesture_class(
     Capture a set of images for a single gesture class.
     Press 'c' to capture a frame, 'q' to quit early.
     """
+    
     output_dir = Path(output_dir) / gesture_name
     output_dir.mkdir(parents=True, exist_ok=True)
 
     cap = cv2.VideoCapture(config.webcam_index)
+    
     if not cap.isOpened():
         raise RuntimeError("Could not open webcam.")
 
@@ -40,7 +42,7 @@ def capture_gesture_class(
         output_dir,
         config.samples_per_class,
     )
-
+    
     count = 0
     while count < config.samples_per_class:
         ret, frame = cap.read()

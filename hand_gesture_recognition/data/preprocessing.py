@@ -11,7 +11,6 @@ from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Deque, Iterable, List, Tuple
-
 import cv2
 import numpy as np
 
